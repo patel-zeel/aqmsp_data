@@ -1,0 +1,38 @@
+__pycache__/
+*.vscode
+*.ipynb_checkpoints
+*.pyc
+*.egg-info/
+aqmsp_data/_version.py
+
+# ignore data
+*.csv
+*.json
+*.pkl
+*.h5
+*.npy
+*.npz
+*.zip
+*.gz
+*.tar
+*.xlsx
+*.nc
+
+# ignore logs
+*.log
+
+# ignore shapefiles
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.sbn
+*.sbx
+*.xml
+*.qpj
+
+/.quarto/
+
+# ignore docs
+docs/

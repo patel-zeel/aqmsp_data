@@ -1,0 +1,17 @@
+[build-system]
+requires = [
+	"setuptools>=50.0",
+	"setuptools_scm[toml]>=6.0",
+	"setuptools_scm_git_archive",
+	"wheel>=0.33",
+	"numpy>=1.16",
+	"cython>=0.29",
+]
+
+[tool.setuptools_scm]
+write_to = "aqmsp_data/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+python_files = "test_*.py"  # Specify a wildcard pattern for test file names
+python_functions = "test_*" # Specify a wildcard pattern for test function names

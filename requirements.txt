@@ -1,0 +1,12 @@
+numpy
+joblib
+psutil
+pandas
+xarray
+requests
+botocore
+boto3
+tqdm-joblib
+kaggle
+netcdf4
+openpyxl

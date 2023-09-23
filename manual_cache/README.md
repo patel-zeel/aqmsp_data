@@ -1,0 +1,1 @@
+Some files are stored in this directory to avoid loosing them when some online resources are not available anymore. For example, if OpenAQ removes CPCB sensors from past data, we will still have the metadata in this directory or if AWS stops providing data, we will still have the metadata in this directory.
