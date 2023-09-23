@@ -1,6 +1,6 @@
 [![Coverage](https://coveralls.io/repos/github/patel-zeel/aqmsp_data/badge.svg?branch=main)](https://coveralls.io/github/patel-zeel/aqmsp_data?branch=main)
 
-[**Tutorials and Documentation**](https://patel-zeel.github.io/aqmsp/)
+[**Tutorials and Documentation**](https://patel-zeel.github.io/aqmsp/) | [**AQMSP**](https://github.com/patel-zeel/aqmsp)
 
 
 # AQMSP Data Repository
