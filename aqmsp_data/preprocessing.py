@@ -7,12 +7,12 @@ from aqmsp.path_utils import get_repo_root
 import aqmsp_data.constants as C
 from aqmsp.debug_utils import set_verbose, verbose_print
 from time import time
-
+from glob import glob
 from typing import Union
 
 
 def preprocess_raw_cpcb(path: str, stations_ds_path: str) -> Union[xr.Dataset, None]:
-    """Preprocess raw CPCB data and return an xarray dataset.
+    """Preprocess raw CPCB data and return an xr dataset.
 
     Args:
         path (str): Path to the raw CPCB data file.
@@ -82,8 +82,8 @@ def preprocess_raw_cpcb(path: str, stations_ds_path: str) -> Union[xr.Dataset, N
     # convert data to numeric
     df = df.apply(pd.to_numeric)
 
-    # convert to xarray dataset
-    ds = df.to_xarray()
+    # convert to xr dataset
+    ds = df.to_xr()
 
     # assign latitudes and longitudes
     ds = ds.assign_coords(
@@ -127,7 +127,7 @@ def split_and_save_cpcb(ds: xr.Dataset):
     if ds is None:
         verbose_print("ds is None. Skipping.")
         return None
-    assert isinstance(ds, xr.Dataset), "ds must be an xarray dataset"
+    assert isinstance(ds, xr.Dataset), "ds must be an xr dataset"
     root = get_repo_root(__file__)
     station = ds.station.values.item()
     station = station.replace(" ", "_")
@@ -249,6 +249,43 @@ def assert_correct_variable(variables):
 def preprocess_raw_camx_output():
     pass
 
+def preprocess_raw_camxmet(path:str)->xr.Dataset:
+    camx_met_files=sorted(glob(path+'/*.nc'))
+    all_datasets=[]
+    for camx_met_file in camx_met_files:
+        assert camx_met_file.endswith(".nc"), f"File '{path}' must be an netcdf file"
+        assert camx_met_file.startswith("camxmet2d.delhi.2023"), f"File '{path}' must start with 'camxmet2d.delhi.2023'"
+        camx_met=xr.open_dataset(camx_met_file)
+        xorig = camx_met.XORIG
+        yorig = camx_met.YORIG
+        longitude = xorig + (camx_met.COL.values - 1) * 0.01
+        latitude = yorig + (camx_met.ROW.values - 1) * 0.01
+        camx_met=camx_met.rename({'ROW':'latitude','COL':'longitude'})
+        camx_met['latitude'],camx_met['longitude']=latitude,longitude
+        temp_datasets=[]
+        for lag in range(4):
+            data_temp=camx_met.sel(TSTEP=slice(lag*24,24*(lag+1)))
+            date_str = camx_met_file.split('.')[-3]
+            timesteps = data_temp.dims['TSTEP']
+            start_time = pd.Timestamp(date_str+' 00:00:00')
+            datetime_index = pd.date_range(start=start_time, periods=timesteps, freq='H')
+            data_temp['TSTEP'] = datetime_index
+            tstep_array = np.array(data_temp['TSTEP'].values, dtype='datetime64[ns]')
+            tstep_array += np.timedelta64(5, 'h') + np.timedelta64(30, 'm')
+            data_temp['TSTEP'] = ('TSTEP', tstep_array)
+            temp_datasets.append(data_temp)
+        reshaped_camx = xr.concat(temp_datasets, pd.Index(range(4), name='lag'))
+        all_datasets.append(reshaped_camx)
+    preprocessed_camx=xr.concat(all_datasets,dim='TSTEP')
+    return preprocessed_camx
+
+def test_preprocess_raw_camxmet():
+    set_verbose(True)
+    path = "/home/utkarsh.mittal/camxmet2d.delhi.2023"
+    ds = preprocess_raw_cpcb(path)
+    verbose_print(ds)
+    assert isinstance(ds, xr.Dataset)
+    return ds
 
 if __name__ == "__main__":
     set_verbose(True)
