@@ -83,7 +83,7 @@ def preprocess_raw_cpcb(path: str, stations_ds_path: str) -> Union[xr.Dataset, N
     df = df.apply(pd.to_numeric)
 
     # convert to xr dataset
-    ds = df.to_xr()
+    ds = df.to_xarray()
 
     # assign latitudes and longitudes
     ds = ds.assign_coords(
