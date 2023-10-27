@@ -249,35 +249,30 @@ def assert_correct_variable(variables):
 def preprocess_raw_camx_output():
     pass
 
-def preprocess_raw_camxmet(path:str)->xr.Dataset:
-    camx_met_files=sorted(glob(path+'/*.nc'))
-    all_datasets=[]
-    for camx_met_file in camx_met_files:
-        assert camx_met_file.endswith(".nc"), f"File '{path}' must be an netcdf file"
-        assert camx_met_file.startswith("camxmet2d.delhi.2023"), f"File '{path}' must start with 'camxmet2d.delhi.2023'"
-        camx_met=xr.open_dataset(camx_met_file)
-        xorig = camx_met.XORIG
-        yorig = camx_met.YORIG
-        longitude = xorig + (camx_met.COL.values - 1) * 0.01
-        latitude = yorig + (camx_met.ROW.values - 1) * 0.01
-        camx_met=camx_met.rename({'ROW':'latitude','COL':'longitude'})
-        camx_met['latitude'],camx_met['longitude']=latitude,longitude
-        temp_datasets=[]
-        for lag in range(4):
-            data_temp=camx_met.sel(TSTEP=slice(lag*24,24*(lag+1)))
-            date_str = camx_met_file.split('.')[-3]
-            timesteps = data_temp.dims['TSTEP']
-            start_time = pd.Timestamp(date_str+' 00:00:00')
-            datetime_index = pd.date_range(start=start_time, periods=timesteps, freq='H')
-            data_temp['TSTEP'] = datetime_index
-            tstep_array = np.array(data_temp['TSTEP'].values, dtype='datetime64[ns]')
-            tstep_array += np.timedelta64(5, 'h') + np.timedelta64(30, 'm')
-            data_temp['TSTEP'] = ('TSTEP', tstep_array)
-            temp_datasets.append(data_temp)
-        reshaped_camx = xr.concat(temp_datasets, pd.Index(range(4), name='lag'))
-        all_datasets.append(reshaped_camx)
-    preprocessed_camx=xr.concat(all_datasets,dim='TSTEP')
-    return preprocessed_camx
+def preprocess_raw_camxmet(camx_met_file:str)->xr.Dataset:
+    assert camx_met_file.endswith(".nc"), f"File '{camx_met_file}' must be an netcdf file"
+    assert camx_met_file.startswith("camxmet2d.delhi.2023"), f"File '{camx_met_file}' must start with 'camxmet2d.delhi.2023'"
+    camx_met=xr.open_dataset(camx_met_file)
+    xorig = camx_met.XORIG
+    yorig = camx_met.YORIG
+    longitude = xorig + (camx_met.COL.values - 1) * 0.01
+    latitude = yorig + (camx_met.ROW.values - 1) * 0.01
+    camx_met=camx_met.rename({'ROW':'latitude','COL':'longitude'})
+    camx_met['latitude'],camx_met['longitude']=latitude,longitude
+    temp_datasets=[]
+    for lag in range(4):
+        data_temp=camx_met.sel(TSTEP=slice(lag*24,24*(lag+1)))
+        date_str = camx_met_file.split('.')[-3]
+        timesteps = data_temp.dims['TSTEP']
+        start_time = pd.Timestamp(date_str+' 00:00:00')
+        datetime_index = pd.date_range(start=start_time, periods=timesteps, freq='H')
+        data_temp['TSTEP'] = datetime_index
+        tstep_array = np.array(data_temp['TSTEP'].values, dtype='datetime64[ns]')
+        tstep_array += np.timedelta64(5, 'h') + np.timedelta64(30, 'm')
+        data_temp['TSTEP'] = ('TSTEP', tstep_array)
+        temp_datasets.append(data_temp)
+    reshaped_camx = xr.concat(temp_datasets, pd.Index(range(4), name='lag')).sel(LAY=0,VAR=0)
+    return reshaped_camx
 
 def test_preprocess_raw_camxmet():
     set_verbose(True)
