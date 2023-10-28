@@ -7,11 +7,12 @@ from aqmsp.path_utils import get_repo_root
 import aqmsp_data.constants as C
 from aqmsp.debug_utils import set_verbose, verbose_print
 from time import time
+
 from typing import Union
 
 
 def preprocess_raw_cpcb(path: str, stations_ds_path: str) -> Union[xr.Dataset, None]:
-    """Preprocess raw CPCB data and return an xr dataset.
+    """Preprocess raw CPCB data and return an xarray dataset.
 
     Args:
         path (str): Path to the raw CPCB data file.
@@ -81,7 +82,7 @@ def preprocess_raw_cpcb(path: str, stations_ds_path: str) -> Union[xr.Dataset, N
     # convert data to numeric
     df = df.apply(pd.to_numeric)
 
-    # convert to xr dataset
+    # convert to xarray dataset
     ds = df.to_xarray()
 
     # assign latitudes and longitudes
@@ -126,7 +127,7 @@ def split_and_save_cpcb(ds: xr.Dataset):
     if ds is None:
         verbose_print("ds is None. Skipping.")
         return None
-    assert isinstance(ds, xr.Dataset), "ds must be an xr dataset"
+    assert isinstance(ds, xr.Dataset), "ds must be an xarray dataset"
     root = get_repo_root(__file__)
     station = ds.station.values.item()
     station = station.replace(" ", "_")
@@ -247,6 +248,7 @@ def assert_correct_variable(variables):
 
 def preprocess_raw_camx_output():
     pass
+
 
 def preprocess_camx_met(camx_met_file: str, verbose: bool = False) -> xr.Dataset:
     assert camx_met_file.endswith(".nc"), f"File '{camx_met_file}' must be a netcdf file"
