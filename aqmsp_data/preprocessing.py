@@ -262,7 +262,7 @@ def preprocess_camx_met(camx_met_file: str, verbose: bool = False) -> xr.Dataset
     camx_met['latitude'], camx_met['longitude'] = latitude, longitude
     temp_datasets = []
     for lag in range(4):
-        data_temp = camx_met.sel(TSTEP=slice(lag * 24, 24 * (lag + 1)))
+        data_temp = camx_met.sel(time=slice(lag * 24, 24 * (lag + 1)))
         date_str = camx_met_file.split('.')[-3]
         timesteps = data_temp.dims['time']
         start_time = pd.Timestamp(date_str + ' 00:00:00')
