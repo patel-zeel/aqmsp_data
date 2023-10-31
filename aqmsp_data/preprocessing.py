@@ -252,7 +252,7 @@ def preprocess_raw_camx_output():
 
 def preprocess_camx_met(camx_met_file: str, verbose: bool = False) -> xr.Dataset:
     assert camx_met_file.endswith(".nc"), f"File '{camx_met_file}' must be a netcdf file"
-    assert camx_met_file.startswith("camxmet2d.delhi"), f"File '{camx_met_file}' must start with 'camxmet2d.delhi'"
+    #assert camx_met_file.startswith("camxmet2d.delhi"), f"File '{camx_met_file}' must start with 'camxmet2d.delhi.2023'"
     camx_met = xr.open_dataset(camx_met_file)
     xorig = camx_met.XORIG
     yorig = camx_met.YORIG
