@@ -258,7 +258,7 @@ def preprocess_camx_met(camx_met_file: str, verbose: bool = False) -> xr.Dataset
     yorig = camx_met.YORIG
     longitude = xorig + (camx_met.COL.values - 1) * 0.01
     latitude = yorig + (camx_met.ROW.values - 1) * 0.01
-    camx_met = camx_met.rename({'ROW': 'latitude', 'COL': 'longitude','TSEP':'time'})
+    camx_met = camx_met.rename({'ROW': 'latitude', 'COL': 'longitude','TSTEP':'time'})
     camx_met['latitude'], camx_met['longitude'] = latitude, longitude
     temp_datasets = []
     for lag in range(4):
