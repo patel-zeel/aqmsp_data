@@ -275,7 +275,7 @@ def preprocess_camx_met(camx_met_file: str, verbose: bool = False) -> xr.Dataset
         if verbose:
             print(f"Preprocessed CAMx meteorological data for lag {lag}:")
             print(data_temp)
-    reshaped_camx = xr.concat(temp_datasets, pd.Index(range(4), name='lag')).sel(LAY=0, VAR=0)
+    reshaped_camx = xr.concat(temp_datasets, pd.Index(range(4), name='lag')).sel(LAY=0, VAR=0).drop('TFLAG')
     return reshaped_camx
 
 if __name__ == "__main__":
