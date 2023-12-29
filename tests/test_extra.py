@@ -1,15 +1,17 @@
 import os
 import git
 
+# This test is written to allow only specific file extensions to avoid accidentally leaking data files.
+
 code_files = [".py", ".ipynb"]
 text_files = [".md", ".qmd", ".txt"]
 config_files = [".yml", ".toml", ".cfg"]
 git_files = [".gitignore", ".gitmodules"]
 other_files = [".template", ".bak"]
-
+special_files = ["camxmet2d.delhi.20231018.96hours.nc"]
 
 def check_file(file_name):
-    allowed_extentions = code_files + text_files + config_files + git_files + other_files
+    allowed_extentions = code_files + text_files + config_files + git_files + other_files + special_files
     for ext in allowed_extentions:
         if file_name.endswith(ext):
             return True
