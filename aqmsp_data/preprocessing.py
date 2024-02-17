@@ -51,9 +51,9 @@ def preprocess_raw_cpcb(path: str, stations_ds_path: str) -> Union[xr.Dataset, N
         allowed_cols = list(C.ALL_ATTRS.keys()) + C.EXCEPTION_VARS + ["From Date", "To Date"]
         assert col in allowed_cols, f"Variable {col} not found in ALL_ATTRS"
 
-    # convert to datetime
-    df["From Date"] = pd.to_datetime(df["From Date"], format="%d-%m-%Y %H:%M")
-    df["To Date"] = pd.to_datetime(df["To Date"], format="%d-%m-%Y %H:%M")
+    # convert to time
+    df["From Date"] = pd.to_time(df["From Date"], format="%d-%m-%Y %H:%M")
+    df["To Date"] = pd.to_time(df["To Date"], format="%d-%m-%Y %H:%M")
     df_len = len(df)
 
     # remove inconsistent dates

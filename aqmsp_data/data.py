@@ -126,13 +126,13 @@ class CPCBData(StationData):
         def get_lat_lon(file):
             df = pd.read_csv(file)
             # format: 2020-09-29T03:00:00+05:30
-            df["datetime"] = pd.to_datetime(df.datetime, format="%Y-%m-%dT%H:%M:%S%z")
+            df["time"] = pd.to_time(df.time, format="%Y-%m-%dT%H:%M:%S%z")
 
-            location_id = int(df.location_id.iloc[0])
+            station = int(df.station.iloc[0])
             location = df.location.iloc[0]
             latitude = float(df.lat.iloc[0])
             longitude = float(df.lon.iloc[0])
-            datetime = df.datetime.values[0].astype("datetime64[ns]")
+            time = df.time.values[0].astype("time64[ns]")
 
             # remove location-id from the location name. Example: "Sector - 62, Noida - IMD-5616" -> "Sector - 62, Noida - IMD"
             station_name = location[::-1].split("-", 1)[1][::-1]
@@ -141,8 +141,8 @@ class CPCBData(StationData):
                 "station": station_name,
                 "latitude": latitude,
                 "longitude": longitude,
-                "location_id": location_id,
-                "datetime": datetime,
+                "station": station,
+                "time": time,
             }
 
         init = time()
@@ -154,8 +154,8 @@ class CPCBData(StationData):
         # create a dataframe
         df = pd.DataFrame(lat_lon_dict).set_index("station")
 
-        # some stations are duplicate because their latitude-longitude got updated over time. Keep the latest one based on location_id.
-        df.sort_values(by="location_id", inplace=True)
+        # some stations are duplicate because their latitude-longitude got updated over time. Keep the latest one based on station.
+        df.sort_values(by="station", inplace=True)
         df = df[~df.index.duplicated(keep="last")].sort_index()
 
         verbose_print(df.head())
