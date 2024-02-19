@@ -246,8 +246,67 @@ def assert_correct_variable(variables):
         assert var in C.ALL_ATTRS.keys(), f"Variable {var} not found in C.ALL_ATTRS"
 
 
-def preprocess_raw_camx_output():
-    pass
+def preprocess_camxmet2d(ds, first=24):
+    ds = ds.isel(TSTEP=slice(0, first))
+    ds["ROW"] = (
+        "ROW",
+        np.arange(ds.attrs["YORIG"], ds.attrs["YORIG"] + ds.attrs["YCELL"] * ds.dims["ROW"], ds.attrs["YCELL"]),
+    )
+    ds["COL"] = (
+        "COL",
+        np.arange(ds.attrs["XORIG"], ds.attrs["XORIG"] + ds.attrs["XCELL"] * ds.dims["COL"], ds.attrs["XCELL"]),
+    )
+    dates = ds["TFLAG"][:, 0, 0]
+    times = ds["TFLAG"][:, 0, 1]
+    # dates is in YYYYDDD format and times in HHMMSS format. Give me a pandas datetime index
+    dates = pd.to_datetime(dates.astype(str), format="%Y%j")
+    times = pd.to_timedelta(times // 10000, unit="h")
+    ds["TSTEP"] = ("TSTEP", dates + times)
+    # squeeze the LAY dimensions
+    ds = ds.squeeze("LAY")
+    # drop the TFLAG variable
+    ds = ds.drop_vars("TFLAG")
+    # rename "ROW" and "COL" to "lat" and "lon"
+    # rename "TSTEP" to "time"
+    ds = ds.rename({"ROW": "lat", "COL": "lon", "TSTEP": "time"})
+    # add 5:30 hours to the time to convert UTC to IST
+    ds["time"] = ds["time"] + pd.Timedelta("5 hours 30 minutes")
+    return ds
+
+
+def preprocess_camxmet3d(ds, first=24):
+    ds = ds.isel(TSTEP=slice(0, first))
+    ds["ROW"] = (
+        "ROW",
+        np.arange(ds.attrs["YORIG"], ds.attrs["YORIG"] + ds.attrs["YCELL"] * ds.dims["ROW"], ds.attrs["YCELL"]),
+    )
+    ds["COL"] = (
+        "COL",
+        np.arange(ds.attrs["XORIG"], ds.attrs["XORIG"] + ds.attrs["XCELL"] * ds.dims["COL"], ds.attrs["XCELL"]),
+    )
+    dates = ds["TFLAG"][:, 0, 0]
+    times = ds["TFLAG"][:, 0, 1]
+    # dates is in YYYYDDD format and times in HHMMSS format. Give me a pandas datetime index
+    dates = pd.to_datetime(dates.astype(str), format="%Y%j")
+    times = pd.to_timedelta(times // 10000, unit="h")
+    ds["TSTEP"] = ("TSTEP", dates + times)
+    # adjust data
+    for var in list(ds.data_vars):
+        if var not in ["TFLAG", "ROW", "COL"]:
+            ds[f"{var}_LAY{0}"] = ds[var].isel(LAY=0)
+            ds[f"{var}_LAY{19}"] = ds[var].isel(LAY=19)
+            ds[f"{var}_3d"] = ds[var].mean("LAY")
+            # drop the original variable
+            ds = ds.drop_vars(var)
+
+    # drop the TFLAG variable
+    ds = ds.drop_vars("TFLAG")
+    # rename "ROW" and "COL" to "lat" and "lon"
+    # rename "TSTEP" to "time"
+    ds = ds.rename({"ROW": "lat", "COL": "lon", "TSTEP": "time"})
+    # add 5:30 hours to the time to convert UTC to IST
+    ds["time"] = ds["time"] + pd.Timedelta("5 hours 30 minutes")
+    return ds
 
 
 if __name__ == "__main__":
