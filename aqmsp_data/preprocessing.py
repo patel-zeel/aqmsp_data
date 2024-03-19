@@ -309,6 +309,34 @@ def preprocess_camxmet3d(ds, first=24):
     return ds
 
 
+def preprocess_camx_met(camx_met_file: str, verbose: bool = False) -> xr.Dataset:
+    assert camx_met_file.endswith(".nc"), f"File '{camx_met_file}' must be a netcdf file"
+    #assert camx_met_file.startswith("camxmet2d.delhi"), f"File '{camx_met_file}' must start with 'camxmet2d.delhi.2023'"
+    camx_met = xr.open_dataset(camx_met_file)
+    xorig = camx_met.XORIG
+    yorig = camx_met.YORIG
+    longitude = xorig + (camx_met.COL.values - 1) * 0.01
+    latitude = yorig + (camx_met.ROW.values - 1) * 0.01
+    camx_met = camx_met.rename({'ROW': 'latitude', 'COL': 'longitude','TSTEP':'time'})
+    camx_met['latitude'], camx_met['longitude'] = latitude, longitude
+    temp_datasets = []
+    for lag in range(4):
+        data_temp = camx_met.sel(time=slice(lag * 24, 24 * (lag + 1)))
+        date_str = camx_met_file.split('.')[-3]
+        timesteps = data_temp.dims['time']
+        start_time = pd.Timestamp(date_str + ' 00:00:00')
+        datetime_index = pd.date_range(start=start_time, periods=timesteps, freq='H')
+        data_temp['time'] = datetime_index
+        tstep_array = np.array(data_temp['time'].values, dtype='datetime64[ns]')
+        tstep_array += np.timedelta64(5, 'h') + np.timedelta64(30, 'm')
+        data_temp['time'] = ('time', tstep_array)
+        temp_datasets.append(data_temp)
+        if verbose:
+            print(f"Preprocessed CAMx meteorological data for lag {lag}:")
+            print(data_temp)
+    reshaped_camx = xr.concat(temp_datasets, pd.Index(range(4), name='lag')).sel(LAY=0, VAR=0).drop('TFLAG')
+    return reshaped_camx
+
 if __name__ == "__main__":
     set_verbose(True)
     test_preprocess_raw_cpcb()
